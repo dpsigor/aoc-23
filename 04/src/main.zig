@@ -2,8 +2,7 @@ const std = @import("std");
 
 pub fn main() !void {
     const out = try banana();
-    _ = out;
-    return;
+    std.debug.print("out: {}\n", .{out});
 }
 
 fn banana() !u64 {
@@ -40,15 +39,11 @@ fn banana() !u64 {
 
         var it = std.mem.split(u8, line[winningIdx .. numbersIdx - 3], " ");
 
-        while (true) {
-            const number = it.next();
-            if (number == null) {
-                break;
-            }
-            if (number.?.len == 0) {
+        while (it.next()) |number| {
+            if (number.len == 0) {
                 continue;
             }
-            const num = try std.fmt.parseInt(u64, number.?, 10);
+            const num = try std.fmt.parseInt(u64, number, 10);
             try winning.put(num, true);
         }
 
@@ -57,25 +52,17 @@ fn banana() !u64 {
 
         it = std.mem.split(u8, line[numbersIdx..line.len], " ");
 
-        while (true) {
-            const number = it.next();
-            if (number == null) {
-                break;
-            }
-            if (number.?.len == 0) {
+        while (it.next()) |number| {
+            if (number.len == 0) {
                 continue;
             }
-            const num = try std.fmt.parseInt(u64, number.?, 10);
+            const num = try std.fmt.parseInt(u64, number, 10);
             try numbers.put(num, true);
         }
 
         var nums = numbers.keyIterator();
-        while (true) {
-            const num = nums.next();
-            if (num == null) {
-                break;
-            }
-            if (winning.contains(num.?.*)) {
+        while (nums.next()) |num| {
+            if (winning.contains(num.*)) {
                 if (local_out == 0) {
                     local_out = 1;
                 } else {
@@ -139,12 +126,8 @@ fn apple() !u64 {
 
         var it = std.mem.split(u8, line[winningIdx .. numbersIdx - 3], " ");
 
-        while (true) {
-            const number = it.next();
-            if (number == null) {
-                break;
-            }
-            if (number.?.len == 0) {
+        while (it.next()) |number| {
+            if (number.len == 0) {
                 continue;
             }
             const num = try std.fmt.parseInt(u64, number.?, 10);
@@ -156,12 +139,8 @@ fn apple() !u64 {
 
         it = std.mem.split(u8, line[numbersIdx..line.len], " ");
 
-        while (true) {
-            const number = it.next();
-            if (number == null) {
-                break;
-            }
-            if (number.?.len == 0) {
+        while (it.next()) |number| {
+            if (number.len == 0) {
                 continue;
             }
             const num = try std.fmt.parseInt(u64, number.?, 10);
@@ -169,12 +148,8 @@ fn apple() !u64 {
         }
 
         var nums = numbers.keyIterator();
-        while (true) {
-            const num = nums.next();
-            if (num == null) {
-                break;
-            }
-            if (winning.contains(num.?.*)) {
+        while (nums.next()) |num| {
+            if (winning.contains(num.*)) {
                 points += 1;
             }
         }
@@ -193,17 +168,13 @@ fn apple() !u64 {
     }
 
     var keys = scratchcards.keyIterator();
-    while (true) {
-        const k = keys.next();
-        if (k == null) {
-            break;
-        }
-        const v = scratchcards.get(k.?.*);
-        if (k.?.* > scratchcard) {
+    while (keys.next()) |k| {
+        if (k.* > scratchcard) {
             continue;
         }
+        const v = scratchcards.get(k.*);
         out += v.?;
-        std.debug.print("k: {d}, v: {d}\n", .{ k.?.*, v.? });
+        std.debug.print("k: {d}, v: {d}\n", .{ k.*, v.? });
     }
 
     return out;

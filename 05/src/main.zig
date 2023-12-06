@@ -1,3 +1,5 @@
+// THIS ANSWER WAS NOT VALIDATED
+
 const std = @import("std");
 
 const dbg = false;
@@ -29,12 +31,8 @@ fn example(filename: []const u8) !u64 {
     while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         if (seeds.items.len == 0) {
             var it = std.mem.split(u8, line[7..], " ");
-            while (true) {
-                const n = it.next();
-                if (n == null) {
-                    break;
-                }
-                const seed = try std.fmt.parseInt(u64, n.?, 10);
+            while (it.next()) |n| {
+                const seed = try std.fmt.parseInt(u64, n, 10);
                 try seeds.append(seed);
             }
             continue;
@@ -46,7 +44,7 @@ fn example(filename: []const u8) !u64 {
 
         if (std.mem.endsWith(u8, line, " map:")) {
             // map values
-            map_values(&seeds, &mapping);
+            try map_values(&seeds, &mapping);
             // release mapping
             mapping.clearAndFree();
             continue;
@@ -55,11 +53,11 @@ fn example(filename: []const u8) !u64 {
         try parse_map(line, &mapping);
     }
 
-    map_values(&seeds, &mapping);
+    try map_values(&seeds, &mapping);
 
     var out: u64 = seeds.items[0];
-    var i: usize = 1;
-    while (i < seeds.items.len) : (i += 1) {
+    var i: usize = 2;
+    while (i < seeds.items.len) : (i += 2) {
         if (seeds.items[i] < out) {
             out = seeds.items[i];
         }
@@ -68,7 +66,7 @@ fn example(filename: []const u8) !u64 {
     return out;
 }
 
-fn map_values(seeds: *std.ArrayList(u64), map: *std.ArrayList([3]u64)) void {
+fn map_values(seeds: *std.ArrayList(u64), map: *std.ArrayList([3]u64)) !void {
     if (map.items.len == 0) {
         return;
     }
@@ -77,13 +75,44 @@ fn map_values(seeds: *std.ArrayList(u64), map: *std.ArrayList([3]u64)) void {
     if (dbg) std.debug.print("======{any}\n", .{map.items});
 
     var i: usize = 0;
-    while (i < seeds.items.len) : (i += 1) {
+    while (i < seeds.items.len) : (i += 2) {
         var j: usize = 0;
         while (j < map.items.len) : (j += 1) {
-            if (seeds.items[i] >= map.items[j][1] and seeds.items[i] <= map.items[j][1] + map.items[j][2]) {
-                const diff = seeds.items[i] - map.items[j][1];
-                if (dbg) std.debug.print("seed {d} source start {d} range {d} dest {d}\n", .{ seeds.items[i], map.items[j][1], map.items[j][1] + map.items[j][2], map.items[j][0] + diff });
-                seeds.items[i] = map.items[j][0] + diff;
+            if (seeds.items[i] <= map.items[j][1] + map.items[j][2] and seeds.items[i] + seeds.items[i + 1] >= map.items[j][1]) {
+                // the ranges overlap
+                var lower_bound = seeds.items[i];
+                var original_lower_lower_bound: u64 = 0;
+                var original_lower_higher_bound: u64 = 0;
+                if (lower_bound < map.items[j][1]) {
+                    original_lower_lower_bound = lower_bound;
+                    original_lower_higher_bound = map.items[j][1] - 1;
+                    lower_bound = map.items[j][1];
+                }
+
+                var higher_bound = seeds.items[i] + seeds.items[i + 1];
+                var original_higher_lower_bound: u64 = 0;
+                var original_higher_higher_bound: u64 = 0;
+                if (higher_bound > map.items[j][1] + map.items[j][2]) {
+                    original_higher_lower_bound = map.items[j][1] + map.items[j][2] + 1;
+                    original_higher_higher_bound = higher_bound;
+                    higher_bound = map.items[j][1] + map.items[j][2];
+                }
+
+                // std.debug.print("{d} {d} | {d} {d} {d}\n", .{ seeds.items[i], seeds.items[i + 1], map.items[j][0], map.items[j][1], map.items[j][2] });
+                seeds.items[i] = lower_bound + map.items[j][0] - map.items[j][1];
+                seeds.items[i + 1] = higher_bound - lower_bound;
+                // std.debug.print("{d} {d}\n", .{ seeds.items[i], seeds.items[i + 1] });
+
+                if (original_lower_lower_bound > 0) {
+                    try seeds.append(original_lower_lower_bound);
+                    try seeds.append(original_lower_higher_bound - original_lower_lower_bound);
+                }
+
+                if (original_higher_lower_bound > 0) {
+                    try seeds.append(original_higher_lower_bound);
+                    try seeds.append(original_higher_higher_bound - original_higher_lower_bound);
+                }
+
                 break;
             }
         }
