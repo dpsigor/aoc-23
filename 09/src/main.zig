@@ -3,6 +3,7 @@ const std = @import("std");
 pub fn main() !void {
     const out = try banana();
     // part 1 = 1762065988
+    // part 2 = 1066
     std.debug.print("out: {d}\n", .{out});
 }
 
@@ -10,7 +11,6 @@ fn nextSequence(seq: *std.ArrayList(i64)) !std.ArrayList(i64) {
     var sequence = try std.ArrayList(i64).initCapacity(std.heap.page_allocator, seq.items.len - 1);
 
     var i: usize = 1;
-    std.debug.print("seq: {any}\n", .{seq.items});
     while (i < seq.items.len) : (i += 1) {
         const d = seq.items[i] - seq.items[i - 1];
         try sequence.append(d);
@@ -20,7 +20,7 @@ fn nextSequence(seq: *std.ArrayList(i64)) !std.ArrayList(i64) {
 }
 
 fn nextValue(history: *std.ArrayList(i64)) !i64 {
-    const last_value = history.items[history.items.len - 1];
+    const first_value = history.items[0];
     var diff: i64 = 0;
 
     const allocator = std.heap.page_allocator;
@@ -34,8 +34,6 @@ fn nextValue(history: *std.ArrayList(i64)) !i64 {
     }
     try sequences.append(first_seq);
 
-    std.debug.print("first: {any}\n", .{first_seq.items});
-
     var done = false;
     while (!done) {
         const sequence = try nextSequence(&sequences.items[sequences.items.len - 1]);
@@ -47,10 +45,10 @@ fn nextValue(history: *std.ArrayList(i64)) !i64 {
     var i: usize = sequences.items.len - 2;
     while (i >= 1) : (i -= 1) {
         const seq = sequences.items[i];
-        diff += seq.items[seq.items.len - 1];
+        diff = seq.items[0] - diff;
     }
 
-    return last_value + diff;
+    return first_value - diff;
 }
 
 fn banana() !i64 {
