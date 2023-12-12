@@ -3,6 +3,7 @@ const std = @import("std");
 pub fn main() !void {
     const out = try solution();
     // solution 1: 10231178
+    // solution 2: 622120986954
     std.debug.print("out {d}\n", .{out});
 }
 
@@ -89,7 +90,7 @@ fn solution() !u64 {
             }
             while (ax < bx) : (ax += 1) {
                 if (emptyCols.contains(ax)) {
-                    dist_hor += 2;
+                    dist_hor += 1000000;
                     continue;
                 }
                 dist_hor += 1;
@@ -104,7 +105,7 @@ fn solution() !u64 {
             }
             while (ay < by) : (ay += 1) {
                 if (emptyRows.contains(ay)) {
-                    dist_ver += 2;
+                    dist_ver += 1000000;
                     continue;
                 }
                 dist_ver += 1;
